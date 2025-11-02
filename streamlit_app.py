@@ -49,7 +49,6 @@ def fitness_function(schedule, ratings_data, schedule_length):
 
 def create_random_schedule(all_programs, schedule_length):
     """Creates a single, completely random schedule."""
-    # This uses random.choice (allows repeats), which is correct.
     return [random.choice(all_programs) for _ in range(schedule_length)]
 
 def crossover(schedule1, schedule2, schedule_length):
@@ -74,14 +73,15 @@ def genetic_algorithm(ratings_data, all_programs, schedule_length,
                       crossover_rate=0.8, mutation_rate=0.2, elitism_size=2):
     """Runs the genetic algorithm."""
     
-    # Initialize population
     population = [create_random_schedule(all_programs, schedule_length) for _ in range(population_size)]
     
     best_schedule_ever = []
     best_fitness_ever = 0
 
+    # This 'for' loop is line 83. The line below it MUST be indented.
     for generation in range(generations):
-.
+        # *** THIS IS THE FIX ***
+        # The stray '.' is removed and this block is indented.
         pop_with_fitness = []
         for schedule in population:
             fitness = fitness_function(schedule, ratings_data, schedule_length)
@@ -130,7 +130,7 @@ st.title("📺 Genetic Algorithm - TV Program Scheduling Optimizer")
 file_path = 'program_ratings_modified.csv' 
 ratings = read_csv_to_dict(file_path)
 
-# *** NEW LINES ADDED HERE ***
+# Display the dataframe at the top
 st.subheader("📊 Program Ratings Dataset")
 try:
     # We read the file *again* with Pandas just to display it easily
@@ -138,7 +138,6 @@ try:
     st.dataframe(df_display)
 except FileNotFoundError:
     st.error(f"Could not find {file_path} to display.")
-# *** END OF NEW LINES ***
 
 
 if ratings:
