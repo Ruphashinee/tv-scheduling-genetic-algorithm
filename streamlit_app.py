@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 import csv
+import numpy as np
 
 # --- PART A: THE GENETIC ALGORITHM "ENGINE" ---
 # This is all the backend logic for the GA
@@ -13,7 +14,7 @@ def read_csv_to_dict(file_path):
         with open(file_path, mode='r', newline='') as file:
             reader = csv.reader(file)
             try:
-                header = next(reader) # Skip header
+                header = next(reader)  # Skip header
             except StopIteration:
                 st.error(f"Error: The file '{file_path}' is empty.")
                 return {}
@@ -38,6 +39,7 @@ def read_csv_to_dict(file_path):
         }
     return program_ratings
 
+
 def fitness_function(schedule, ratings_data, schedule_length):
     """Calculates the total fitness of a given schedule."""
     total_rating = 0
@@ -47,9 +49,11 @@ def fitness_function(schedule, ratings_data, schedule_length):
                 total_rating += ratings_data[program][time_slot]
     return total_rating
 
+
 def create_random_schedule(all_programs, schedule_length):
     """Creates a single, completely random schedule."""
     return [random.choice(all_programs) for _ in range(schedule_length)]
+
 
 def crossover(schedule1, schedule2, schedule_length):
     """Performs single-point crossover (correct for assignment)."""
@@ -60,6 +64,7 @@ def crossover(schedule1, schedule2, schedule_length):
     child2 = schedule2[:crossover_point] + schedule1[crossover_point:]
     return child1, child2
 
+
 def mutate(schedule, all_programs, schedule_length):
     """Mutates a schedule by changing one random gene (correct for assignment)."""
     schedule_copy = schedule.copy()
@@ -67,6 +72,7 @@ def mutate(schedule, all_programs, schedule_length):
     new_program = random.choice(all_programs)
     schedule_copy[mutation_point] = new_program
     return schedule_copy
+
 
 def genetic_algorithm(ratings_data, all_programs, schedule_length,
                       generations=100, population_size=50,
@@ -78,10 +84,7 @@ def genetic_algorithm(ratings_data, all_programs, schedule_length,
     best_schedule_ever = []
     best_fitness_ever = 0
 
-    # This 'for' loop is line 83. The line below it MUST be indented.
     for generation in range(generations):
-        # *** THIS IS THE FIX ***
-        # The stray '.' is removed and this block is indented.
         pop_with_fitness = []
         for schedule in population:
             fitness = fitness_function(schedule, ratings_data, schedule_length)
@@ -121,8 +124,8 @@ def genetic_algorithm(ratings_data, all_programs, schedule_length,
 
     return best_schedule_ever, best_fitness_ever
 
+
 # --- PART B: THE STREAMLIT WEB APPLICATION ---
-# This code builds the user interface
 
 st.title("📺 Genetic Algorithm - TV Program Scheduling Optimizer")
 
@@ -133,7 +136,6 @@ ratings = read_csv_to_dict(file_path)
 # Display the dataframe at the top
 st.subheader("📊 Program Ratings Dataset")
 try:
-    # We read the file *again* with Pandas just to display it easily
     df_display = pd.read_csv(file_path)
     st.dataframe(df_display)
 except FileNotFoundError:
@@ -142,54 +144,55 @@ except FileNotFoundError:
 
 if ratings:
     all_programs = list(ratings.keys())
-    all_time_slots = list(range(6, 24)) # 6:00 to 23:00
-    SCHEDULE_LENGTH = len(all_time_slots) # 18 slots
+    all_time_slots = list(range(6, 24))  # 6:00 to 23:00
+    SCHEDULE_LENGTH = len(all_time_slots)  # 18 slots
     
     st.write(f"Successfully loaded {len(all_programs)} programs for optimization.")
     st.write(f"Schedule will be optimized for {SCHEDULE_LENGTH} time slots (6:00 to 23:00).")
 
     # --- 2. Sidebar for Parameter Input ---
-    # This fulfills Instruction 3
     st.sidebar.header("🧬 Set GA Parameters")
 
-    # Parameters for Trial 1
+    # Trial 1
     st.sidebar.subheader("Trial 1")
     co_r_1 = st.sidebar.slider("Crossover Rate (Trial 1)", 0.0, 0.95, 0.8, 0.05)
     mut_r_1 = st.sidebar.slider("Mutation Rate (Trial 1)", 0.01, 0.05, 0.02, 0.01)
 
-    # Parameters for Trial 2
+    # Trial 2
     st.sidebar.subheader("Trial 2")
     co_r_2 = st.sidebar.slider("Crossover Rate (Trial 2)", 0.0, 0.95, 0.9, 0.05)
     mut_r_2 = st.sidebar.slider("Mutation Rate (Trial 2)", 0.01, 0.05, 0.01, 0.01)
 
-    # Parameters for Trial 3
+    # Trial 3
     st.sidebar.subheader("Trial 3")
     co_r_3 = st.sidebar.slider("Crossover Rate (Trial 3)", 0.0, 0.95, 0.7, 0.05)
     mut_r_3 = st.sidebar.slider("Mutation Rate (Trial 3)", 0.01, 0.05, 0.05, 0.01)
 
     # --- 3. Run Button and Display Results ---
-    # This fulfills Instructions 4 and 5
     if st.sidebar.button("🚀 Run All 3 Trials"):
-        
-        # --- Run Trial 1 ---
+
+        # --- TRIAL 1 ---
+        random.seed(10)
+        np.random.seed(10)
         st.header("Trial 1 Results")
-        st.write(f"**Parameters:** Crossover Rate = `{co_r_1}`, Mutation Rate = `{mut_r_1}`")
+        st.write(f"*Parameters:* Crossover Rate = {co_r_1}, Mutation Rate = {mut_r_1}")
         schedule_1, fitness_1 = genetic_algorithm(
             ratings_data=ratings, all_programs=all_programs, schedule_length=SCHEDULE_LENGTH,
             crossover_rate=co_r_1, mutation_rate=mut_r_1
         )
-        # Create DataFrame for table display
         df_1 = pd.DataFrame({
             "Time Slot": [f"{h:02d}:00" for h in all_time_slots],
             "Scheduled Program": schedule_1
         })
         st.dataframe(df_1)
-        st.write(f"**Best Fitness Score:** `{fitness_1:.2f}`")
+        st.write(f"*Best Fitness Score:* {fitness_1:.2f}")
         st.markdown("---")
 
-        # --- Run Trial 2 ---
+        # --- TRIAL 2 ---
+        random.seed(20)
+        np.random.seed(20)
         st.header("Trial 2 Results")
-        st.write(f"**Parameters:** Crossover Rate = `{co_r_2}`, Mutation Rate = `{mut_r_2}`")
+        st.write(f"*Parameters:* Crossover Rate = {co_r_2}, Mutation Rate = {mut_r_2}")
         schedule_2, fitness_2 = genetic_algorithm(
             ratings_data=ratings, all_programs=all_programs, schedule_length=SCHEDULE_LENGTH,
             crossover_rate=co_r_2, mutation_rate=mut_r_2
@@ -199,12 +202,14 @@ if ratings:
             "Scheduled Program": schedule_2
         })
         st.dataframe(df_2)
-        st.write(f"**Best Fitness Score:** `{fitness_2:.2f}`")
+        st.write(f"*Best Fitness Score:* {fitness_2:.2f}")
         st.markdown("---")
 
-        # --- Run Trial 3 ---
+        # --- TRIAL 3 ---
+        random.seed(30)
+        np.random.seed(30)
         st.header("Trial 3 Results")
-        st.write(f"**Parameters:** Crossover Rate = `{co_r_3}`, Mutation Rate = `{mut_r_3}`")
+        st.write(f"*Parameters:* Crossover Rate = {co_r_3}, Mutation Rate = {mut_r_3}")
         schedule_3, fitness_3 = genetic_algorithm(
             ratings_data=ratings, all_programs=all_programs, schedule_length=SCHEDULE_LENGTH,
             crossover_rate=co_r_3, mutation_rate=mut_r_3
@@ -214,7 +219,7 @@ if ratings:
             "Scheduled Program": schedule_3
         })
         st.dataframe(df_3)
-        st.write(f"**Best Fitness Score:** `{fitness_3:.2f}`")
+        st.write(f"*Best Fitness Score:* {fitness_3:.2f}")
         st.markdown("---")
 
 else:
