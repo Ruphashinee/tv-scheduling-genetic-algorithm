@@ -81,6 +81,7 @@ def genetic_algorithm(ratings_data, all_programs, schedule_length,
     best_fitness_ever = 0
 
     for generation in range(generations):
+.
         pop_with_fitness = []
         for schedule in population:
             fitness = fitness_function(schedule, ratings_data, schedule_length)
@@ -123,23 +124,34 @@ def genetic_algorithm(ratings_data, all_programs, schedule_length,
 # --- PART B: THE STREAMLIT WEB APPLICATION ---
 # This code builds the user interface
 
-st.title("Genetic Algorithm for TV Schedule Optimization")
+st.title("📺 Genetic Algorithm - TV Program Scheduling Optimizer")
 
 # --- 1. Load Data ---
 file_path = 'program_ratings_modified.csv' 
 ratings = read_csv_to_dict(file_path)
+
+# *** NEW LINES ADDED HERE ***
+st.subheader("📊 Program Ratings Dataset")
+try:
+    # We read the file *again* with Pandas just to display it easily
+    df_display = pd.read_csv(file_path)
+    st.dataframe(df_display)
+except FileNotFoundError:
+    st.error(f"Could not find {file_path} to display.")
+# *** END OF NEW LINES ***
+
 
 if ratings:
     all_programs = list(ratings.keys())
     all_time_slots = list(range(6, 24)) # 6:00 to 23:00
     SCHEDULE_LENGTH = len(all_time_slots) # 18 slots
     
-    st.write(f"Successfully loaded {len(all_programs)} programs from `{file_path}`.")
+    st.write(f"Successfully loaded {len(all_programs)} programs for optimization.")
     st.write(f"Schedule will be optimized for {SCHEDULE_LENGTH} time slots (6:00 to 23:00).")
 
     # --- 2. Sidebar for Parameter Input ---
     # This fulfills Instruction 3
-    st.sidebar.header("Set GA Parameters")
+    st.sidebar.header("🧬 Set GA Parameters")
 
     # Parameters for Trial 1
     st.sidebar.subheader("Trial 1")
@@ -158,7 +170,7 @@ if ratings:
 
     # --- 3. Run Button and Display Results ---
     # This fulfills Instructions 4 and 5
-    if st.sidebar.button("Run All 3 Trials"):
+    if st.sidebar.button("🚀 Run All 3 Trials"):
         
         # --- Run Trial 1 ---
         st.header("Trial 1 Results")
