@@ -28,19 +28,21 @@ st.sidebar.write("---")
 programs = df["Type of Program"].tolist()
 ratings = df.drop(columns=["Type of Program"]).values
 hours = df.columns[1:]
+num_hours = len(hours)
 
 # Fitness function
 def fitness(schedule):
     total = 0
-    for i, prog_index in enumerate(schedule):
-        total += ratings[prog_index][i]
+    for h in range(num_hours):
+        total += ratings[schedule[h]][h]
     return total
 
 # Generate population
 def generate_population():
     population = []
     for _ in range(POP):
-        population.append(random.sample(range(len(programs)), len(programs)))
+        # each schedule length must equal number of hours (not programs)
+        population.append(random.sample(range(len(programs)), num_hours))
     return population
 
 # Selection (tournament)
@@ -50,14 +52,18 @@ def select(population):
 
 # Crossover (single point)
 def crossover(parent1, parent2):
-    point = random.randint(1, len(parent1) - 2)
+    point = random.randint(1, num_hours - 2)
     child = parent1[:point] + [p for p in parent2 if p not in parent1[:point]]
+    # if child shorter than num_hours, fill with random remaining
+    while len(child) < num_hours:
+        remaining = [p for p in range(len(programs)) if p not in child]
+        child.append(random.choice(remaining))
     return child
 
 # Mutation (swap)
 def mutate(individual):
     if random.random() < MUT_R:
-        i, j = random.sample(range(len(individual)), 2)
+        i, j = random.sample(range(num_hours), 2)
         individual[i], individual[j] = individual[j], individual[i]
     return individual
 
@@ -65,7 +71,7 @@ def mutate(individual):
 def genetic_algorithm():
     population = generate_population()
     best = None
-    best_fit = 0
+    best_fit = -1
     for g in range(GEN):
         new_pop = []
         for _ in range(POP):
